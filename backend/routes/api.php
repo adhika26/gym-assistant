@@ -33,4 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/v1/meal-entries', [MealEntryController::class, 'index']);
 Route::post('/v1/meal-entries', [MealEntryController::class, 'store']);
+Route::put('/v1/meal-entries/{id}', [MealEntryController::class, 'update']);
+Route::delete('/v1/meal-entries/{id}', [MealEntryController::class, 'destroy']);
 });

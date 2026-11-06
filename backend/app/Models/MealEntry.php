@@ -15,7 +15,7 @@ class MealEntry extends Model
     protected function casts(): array
     {
         return [
-            'consumed_on' => 'date',
+            'consumed_on' => 'date:Y-m-d',
             'quantity_g' => 'float',
             'calories' => 'float',
             'protein_g' => 'float',

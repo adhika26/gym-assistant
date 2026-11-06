@@ -153,4 +153,87 @@ class MealEntryTest extends TestCase
                 'quantity_g',
             ]);
     }
+
+    private function makeEntry(User $user, Food $food, array $overrides = [])
+{
+    return $user->mealEntries()->create(array_merge([
+        'food_id' => $food->id,
+        'consumed_on' => '2026-11-06',
+        'meal_type' => 'lunch',
+        'quantity_g' => 100,
+        'calories' => 130,
+        'protein_g' => 2.7,
+        'carbs_g' => 28.2,
+        'fat_g' => 0.3,
+    ], $overrides));
+}
+
+public function test_user_can_update_quantity_and_macros_are_recalculated(): void
+{
+    $user = User::factory()->create();
+    $food = Food::factory()->create([
+        'calories' => 130,
+        'protein_g' => 2.7,
+        'carbs_g' => 28.2,
+        'fat_g' => 0.3,
+    ]);
+    $entry = $this->makeEntry($user, $food);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->putJson("/api/v1/meal-entries/{$entry->id}", [
+        'quantity_g' => 250,
+        'meal_type' => 'dinner',
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('entry.meal_type', 'dinner')
+        ->assertJsonPath('entry.quantity_g', 250);
+
+    $this->assertEquals(325, $response->json('entry.calories'));
+    $this->assertEquals(6.75, $response->json('entry.protein_g'));
+}
+
+public function test_user_cannot_update_another_users_entry(): void
+{
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+    $food = Food::factory()->create();
+    $entry = $this->makeEntry($other, $food);
+
+    Sanctum::actingAs($user);
+
+    $this->putJson("/api/v1/meal-entries/{$entry->id}", [
+        'quantity_g' => 200,
+    ])->assertNotFound();
+}
+
+public function test_user_can_delete_own_entry(): void
+{
+    $user = User::factory()->create();
+    $food = Food::factory()->create();
+    $entry = $this->makeEntry($user, $food);
+
+    Sanctum::actingAs($user);
+
+    $this->deleteJson("/api/v1/meal-entries/{$entry->id}")
+        ->assertNoContent();
+
+    $this->assertDatabaseMissing('meal_entries', [
+        'id' => $entry->id,
+    ]);
+}
+
+public function test_user_cannot_delete_another_users_entry(): void
+{
+    $user = User::factory()->create();
+    $other = User::factory()->create();
+    $food = Food::factory()->create();
+    $entry = $this->makeEntry($other, $food);
+
+    Sanctum::actingAs($user);
+
+    $this->deleteJson("/api/v1/meal-entries/{$entry->id}")
+        ->assertNotFound();
+}
 }

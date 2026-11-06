@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreMealEntryRequest;
+use App\Http\Requests\Api\V1\UpdateMealEntryRequest;
 use App\Models\Food;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class MealEntryController extends Controller
 {
@@ -60,5 +62,48 @@ class MealEntryController extends Controller
         return response()->json([
             'entry' => $entry->load('food'),
         ], 201);
+    }
+
+    public function update(UpdateMealEntryRequest $request, int $id): JsonResponse
+    {
+        $entry = $request->user()
+            ->mealEntries()
+            ->with('food')
+            ->findOrFail($id);
+
+        if (! $entry->food) {
+            return response()->json([
+                'message' => 'Data makanan sudah tidak tersedia.',
+            ], 422);
+        }
+
+        $validated = $request->validated();
+        $quantity = $validated['quantity_g'] ?? $entry->quantity_g;
+        $factor = $quantity / 100;
+
+        $entry->update([
+            'consumed_on' => $validated['consumed_on'] ?? $entry->consumed_on,
+            'meal_type' => $validated['meal_type'] ?? $entry->meal_type,
+            'quantity_g' => $quantity,
+            'calories' => round($entry->food->calories * $factor, 2),
+            'protein_g' => round($entry->food->protein_g * $factor, 2),
+            'carbs_g' => round($entry->food->carbs_g * $factor, 2),
+            'fat_g' => round($entry->food->fat_g * $factor, 2),
+        ]);
+
+        return response()->json([
+            'entry' => $entry->fresh('food'),
+        ]);
+    }
+
+    public function destroy(Request $request, int $id): Response
+    {
+        $entry = $request->user()
+            ->mealEntries()
+            ->findOrFail($id);
+
+        $entry->delete();
+
+        return response()->noContent();
     }
 }
