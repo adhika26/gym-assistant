@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\MealEntryController;
+use App\Http\Controllers\Api\V1\ExerciseController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -35,4 +36,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/v1/meal-entries', [MealEntryController::class, 'store']);
 Route::put('/v1/meal-entries/{id}', [MealEntryController::class, 'update']);
 Route::delete('/v1/meal-entries/{id}', [MealEntryController::class, 'destroy']);
+
+Route::get('/v1/exercises', [ExerciseController::class, 'index']);
 });
