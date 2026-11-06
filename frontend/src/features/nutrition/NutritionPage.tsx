@@ -8,6 +8,7 @@ import {
   searchFoods,
 } from './api'
 import type { DailyLog, Food, MealType } from './types'
+import { todayLocal } from '../../lib/date'
 
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
@@ -16,13 +17,6 @@ const MEAL_LABELS: Record<MealType, string> = {
   lunch: 'Makan siang',
   dinner: 'Makan malam',
   snack: 'Camilan',
-}
-
-function todayLocal(): string {
-  const now = new Date()
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
-
-  return local.toISOString().slice(0, 10)
 }
 
 export default function NutritionPage() {
