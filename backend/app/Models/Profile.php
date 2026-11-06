@@ -23,6 +23,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'dietary_preferences',
     'allergies',
     'onboarded_at',
+    'bmr',
+'tdee',
+'calorie_target',
+'protein_g',
+'fat_g',
+'carbs_g',
+'water_ml',
 ])]
 class Profile extends Model
 {
@@ -38,6 +45,13 @@ class Profile extends Model
             'dietary_preferences' => 'array',
             'allergies' => 'array',
             'onboarded_at' => 'datetime',
+            'bmr' => 'integer',
+'tdee' => 'integer',
+'calorie_target' => 'integer',
+'protein_g' => 'integer',
+'fat_g' => 'integer',
+'carbs_g' => 'integer',
+'water_ml' => 'integer',
         ];
     }
 
