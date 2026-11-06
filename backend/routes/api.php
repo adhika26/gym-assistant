@@ -2,6 +2,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ProfileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -19,4 +20,12 @@ Route::post('/v1/auth/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/auth/me', [AuthController::class, 'me']);
     Route::post('/v1/auth/logout', [AuthController::class, 'logout']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/v1/auth/me', [AuthController::class, 'me']);
+    Route::post('/v1/auth/logout', [AuthController::class, 'logout']);
+
+    Route::get('/v1/profile', [ProfileController::class, 'show']);
+    Route::put('/v1/profile', [ProfileController::class, 'update']);
 });
