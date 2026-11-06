@@ -5,6 +5,7 @@ import RequireAuth from "./features/auth/RequireAuth";
 import DashboardPage from "./pages/DashboardPage";
 import OnboardingPage from "./features/profile/OnboardingPage";
 import NutritionPage from "./features/nutrition/NutritionPage";
+import WorkoutPage from "./features/workout/WorkoutPage";
 
 export default function App() {
   return (
@@ -34,6 +35,14 @@ export default function App() {
         element={
           <RequireAuth>
             <NutritionPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/workout"
+        element={
+          <RequireAuth>
+            <WorkoutPage />
           </RequireAuth>
         }
       />

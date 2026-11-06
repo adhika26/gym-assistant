@@ -47,4 +47,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(WorkoutSession::class);
     }
+
+    public function bodyMeasurements(): HasMany
+    {
+        return $this->hasMany(BodyMeasurement::class);
+    }
 }
