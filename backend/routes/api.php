@@ -1,8 +1,10 @@
 <?php
+
+use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\FoodController;
+use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\ProfileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -17,10 +19,6 @@ Route::get('/v1/ping', function () {
 
 Route::post('/v1/auth/register', [AuthController::class, 'register']);
 Route::post('/v1/auth/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/v1/auth/me', [AuthController::class, 'me']);
-    Route::post('/v1/auth/logout', [AuthController::class, 'logout']);
-});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/auth/me', [AuthController::class, 'me']);
@@ -28,4 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/v1/profile', [ProfileController::class, 'show']);
     Route::put('/v1/profile', [ProfileController::class, 'update']);
+
+    Route::get('/v1/foods', [FoodController::class, 'index']);
+    Route::post('/v1/foods', [FoodController::class, 'store']);
 });
