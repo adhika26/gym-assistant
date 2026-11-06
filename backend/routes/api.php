@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\FoodController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\MealEntryController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -29,4 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/v1/foods', [FoodController::class, 'index']);
     Route::post('/v1/foods', [FoodController::class, 'store']);
+
+    Route::get('/v1/meal-entries', [MealEntryController::class, 'index']);
+Route::post('/v1/meal-entries', [MealEntryController::class, 'store']);
 });
