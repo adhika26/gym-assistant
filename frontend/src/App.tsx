@@ -1,9 +1,10 @@
-import { Navigate, Route, Routes } from 'react-router'
-import LoginPage from './features/auth/LoginPage'
-import RegisterPage from './features/auth/RegisterPage'
-import RequireAuth from './features/auth/RequireAuth'
-import DashboardPage from './pages/DashboardPage'
-import OnboardingPage from './features/profile/OnboardingPage'
+import { Navigate, Route, Routes } from "react-router";
+import LoginPage from "./features/auth/LoginPage";
+import RegisterPage from "./features/auth/RegisterPage";
+import RequireAuth from "./features/auth/RequireAuth";
+import DashboardPage from "./pages/DashboardPage";
+import OnboardingPage from "./features/profile/OnboardingPage";
+import NutritionPage from "./features/nutrition/NutritionPage";
 
 export default function App() {
   return (
@@ -21,13 +22,21 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
 
       <Route
-  path="/onboarding"
-  element={
-    <RequireAuth>
-      <OnboardingPage />
-    </RequireAuth>
-  }
-/>
+        path="/onboarding"
+        element={
+          <RequireAuth>
+            <OnboardingPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/nutrition"
+        element={
+          <RequireAuth>
+            <NutritionPage />
+          </RequireAuth>
+        }
+      />
     </Routes>
-  )
+  );
 }
