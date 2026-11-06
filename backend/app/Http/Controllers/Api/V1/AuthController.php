@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\LoginRequest;
 use App\Http\Requests\Api\V1\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use App\Http\Requests\Api\V1\LoginRequest;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -25,20 +27,34 @@ class AuthController extends Controller
     }
 
     public function login(LoginRequest $request): JsonResponse
-{
-    $user = User::where('email', $request->validated('email'))->first();
+    {
+        $user = User::where('email', $request->validated('email'))->first();
 
-    if (! $user || ! Hash::check($request->validated('password'), $user->password)) {
-        throw ValidationException::withMessages([
-            'email' => ['Email atau password salah.'],
+        if (! $user || ! Hash::check($request->validated('password'), $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['Email atau password salah.'],
+            ]);
+        }
+
+        $token = $user->createToken('web')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
         ]);
     }
 
-    $token = $user->createToken('web')->plainTextToken;
+    public function me(Request $request): JsonResponse
+    {
+        return response()->json([
+            'user' => $request->user(),
+        ]);
+    }
 
-    return response()->json([
-        'user' => $user,
-        'token' => $token,
-    ]);
-}
+    public function logout(Request $request): Response
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->noContent();
+    }
 }
