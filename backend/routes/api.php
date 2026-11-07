@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\MealEntryController;
 use App\Http\Controllers\Api\V1\ExerciseController;
 use App\Http\Controllers\Api\V1\WorkoutSessionController;
+use App\Http\Controllers\Api\V1\MeasurementController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -44,4 +45,8 @@ Route::get('/v1/workout-sessions', [WorkoutSessionController::class, 'index']);
 Route::post('/v1/workout-sessions', [WorkoutSessionController::class, 'store']);
 Route::get('/v1/workout-sessions/{id}', [WorkoutSessionController::class, 'show']);
 Route::delete('/v1/workout-sessions/{id}', [WorkoutSessionController::class, 'destroy']);
+
+Route::get('/v1/measurements', [MeasurementController::class, 'index']);
+Route::post('/v1/measurements', [MeasurementController::class, 'store']);
+Route::delete('/v1/measurements/{id}', [MeasurementController::class, 'destroy']);
 });
