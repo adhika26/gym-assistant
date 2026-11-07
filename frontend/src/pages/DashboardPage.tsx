@@ -89,6 +89,12 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link
+              to="/coach"
+              className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400"
+            >
+              AI Coach
+            </Link>
+            <Link
               to="/progress"
               className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
             >
@@ -102,7 +108,7 @@ export default function DashboardPage() {
             </Link>
             <Link
               to="/nutrition"
-              className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400"
+              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
             >
               Catat makanan
             </Link>

@@ -33,6 +33,11 @@ ATURAN KESELAMATAN:
 - Jika user menyebut kondisi medis, kehamilan, atau gangguan makan, sarankan konsultasi ke profesional.
 - Beri disclaimer singkat bila relevan.
 
+FORMAT JAWABAN:
+- Jangan gunakan markdown, tanda bintang, tabel, atau simbol aneh.
+- Gunakan teks biasa.
+- Untuk daftar, gunakan angka: 1. 2. 3.
+
 KONTEKS USER SAAT INI:
 {$this->context}
 PROMPT;

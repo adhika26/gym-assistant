@@ -41,6 +41,8 @@ class AiChatController extends Controller
         ChatRequest $request,
         FitnessContextBuilder $contextBuilder,
     ): JsonResponse {
+        set_time_limit(120);
+
         $validated = $request->validated();
         $user = $request->user();
         $conversationId = $validated['conversation_id'] ?? null;
@@ -61,7 +63,7 @@ class AiChatController extends Controller
                 $validated['message'],
                 provider: config('ai.default'),
                 model: config('ai.default_model'),
-                timeout: 60,
+                timeout: 120,
             );
 
         return response()->json([

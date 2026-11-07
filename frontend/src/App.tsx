@@ -6,11 +6,10 @@ import RequireAuth from "./features/auth/RequireAuth";
 import DashboardPage from "./pages/DashboardPage";
 import OnboardingPage from "./features/profile/OnboardingPage";
 
-const NutritionPage = lazy(
-  () => import("./features/nutrition/NutritionPage"),
-);
+const NutritionPage = lazy(() => import("./features/nutrition/NutritionPage"));
 const WorkoutPage = lazy(() => import("./features/workout/WorkoutPage"));
 const ProgressPage = lazy(() => import("./features/progress/ProgressPage"));
+const ChatPage = lazy(() => import("./features/chat/ChatPage"));
 
 export default function App() {
   return (
@@ -68,6 +67,15 @@ export default function App() {
         />
 
         <Route path="*" element={<Navigate to="/" replace />} />
+
+        <Route
+          path="/coach"
+          element={
+            <RequireAuth>
+              <ChatPage />
+            </RequireAuth>
+          }
+        />
       </Routes>
     </Suspense>
   );
