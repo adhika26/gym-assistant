@@ -88,18 +88,29 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-semibold">{user?.name}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/workout" className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-400">
+            <Link
+              to="/progress"
+              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
+            >
+              Progress
+            </Link>
+            <Link
+              to="/workout"
+              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
+            >
               Latihan
             </Link>
             <Link
               to="/nutrition"
-              className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400">
+              className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400"
+            >
               Catat makanan
             </Link>
             <button
               type="button"
               onClick={() => void handleLogout()}
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-red-500 hover:text-red-400">
+              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-red-500 hover:text-red-400"
+            >
               Logout
             </button>
           </div>
