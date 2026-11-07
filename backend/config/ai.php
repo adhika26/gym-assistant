@@ -14,6 +14,7 @@ return [
     */
 
     'default' => env('AI_PROVIDER', 'gemini'),
+    'default_model' => env('GEMINI_MODEL', 'models/gemini-3.1-flash-lite'),
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',
