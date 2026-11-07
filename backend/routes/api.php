@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\MealEntryController;
 use App\Http\Controllers\Api\V1\ExerciseController;
 use App\Http\Controllers\Api\V1\WorkoutSessionController;
 use App\Http\Controllers\Api\V1\MeasurementController;
+use App\Http\Controllers\Api\V1\AiChatController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -49,4 +50,9 @@ Route::delete('/v1/workout-sessions/{id}', [WorkoutSessionController::class, 'de
 Route::get('/v1/measurements', [MeasurementController::class, 'index']);
 Route::post('/v1/measurements', [MeasurementController::class, 'store']);
 Route::delete('/v1/measurements/{id}', [MeasurementController::class, 'destroy']);
+
+Route::get('/v1/ai/conversations', [AiChatController::class, 'conversations']);
+Route::get('/v1/ai/conversations/{id}/messages', [AiChatController::class, 'messages']);
+Route::post('/v1/ai/chat', [AiChatController::class, 'chat'])
+    ->middleware('throttle:10,1');
 });
