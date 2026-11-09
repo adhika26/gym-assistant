@@ -7,8 +7,11 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-400">
-        Memuat...
+      <div
+        className="flex min-h-screen items-center justify-center bg-paper px-6 text-sm text-muted"
+        aria-live="polite"
+      >
+        Memuat sesi...
       </div>
     )
   }

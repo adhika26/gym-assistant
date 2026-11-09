@@ -1,6 +1,16 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useRef, useState } from 'react'
 import { ApiError } from '../../lib/api'
+import {
+  errorBanner,
+  ghostButton,
+  inputClass,
+  labelClass,
+  pageIntro,
+  pageTitle,
+  primaryButton,
+  sectionLabel,
+} from '../../lib/ui'
+import { todayLocal } from '../../lib/date'
 import {
   createMealEntry,
   deleteMealEntry,
@@ -8,7 +18,6 @@ import {
   searchFoods,
 } from './api'
 import type { DailyLog, Food, MealType } from './types'
-import { todayLocal } from '../../lib/date'
 
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
@@ -17,6 +26,14 @@ const MEAL_LABELS: Record<MealType, string> = {
   lunch: 'Makan siang',
   dinner: 'Makan malam',
   snack: 'Camilan',
+}
+
+function formatCalories(value: number): string {
+  return Math.round(value).toLocaleString('id-ID')
+}
+
+function formatMacro(value: number): string {
+  return (Math.round(value * 10) / 10).toLocaleString('id-ID')
 }
 
 export default function NutritionPage() {
@@ -35,6 +52,8 @@ export default function NutritionPage() {
   const [addError, setAddError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
+  const searchRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     let cancelled = false
 
@@ -47,7 +66,7 @@ export default function NutritionPage() {
         if (!cancelled) setLog(data)
       })
       .catch(() => {
-        if (!cancelled) setError('Gagal memuat log makanan.')
+        if (!cancelled) setError('Catatan makanan gagal dimuat.')
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -92,6 +111,20 @@ export default function NutritionPage() {
   async function refreshLog() {
     const data = await getDailyLog(date)
     setLog(data)
+  }
+
+  function focusAddForm(nextMeal?: MealType) {
+    if (nextMeal) setMealType(nextMeal)
+
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+
+    document.getElementById('tambah-makan')?.scrollIntoView({
+      behavior: reducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    })
+    searchRef.current?.focus()
   }
 
   function handleSelectFood(food: Food) {
@@ -139,7 +172,7 @@ export default function NutritionPage() {
       if (err instanceof ApiError) {
         setAddError(err.errors?.quantity_g?.[0] ?? err.message)
       } else {
-        setAddError('Gagal menambah makanan.')
+        setAddError('Makanan gagal ditambahkan.')
       }
     } finally {
       setAdding(false)
@@ -147,7 +180,7 @@ export default function NutritionPage() {
   }
 
   async function handleDeleteEntry(id: number) {
-    if (!window.confirm('Hapus makanan ini dari log?')) return
+    if (!window.confirm('Hapus makanan ini dari catatan?')) return
 
     setDeletingId(id)
     setError(null)
@@ -156,7 +189,7 @@ export default function NutritionPage() {
       await deleteMealEntry(id)
       await refreshLog()
     } catch {
-      setError('Gagal menghapus entri.')
+      setError('Entri gagal dihapus.')
     } finally {
       setDeletingId(null)
     }
@@ -169,75 +202,121 @@ export default function NutritionPage() {
       : null
 
   return (
-    <main className="min-h-screen bg-slate-950 p-6 text-slate-100">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">Nutrisi</h1>
-            <p className="text-sm text-slate-400">Catatan makanan harian Anda.</p>
-          </div>
+    <div className="space-y-10">
+      <header className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
+            Catatan makanan
+          </p>
+          <h1 className={`${pageTitle} mt-2`}>Nutrisi</h1>
+          <p className={pageIntro}>
+            Cari makanan, atur porsi, lalu lihat sisa kalori hari ini.
+          </p>
+        </div>
 
-          <div className="flex items-center gap-3">
-            <Link
-              to="/"
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
-            >
-              Dashboard
-            </Link>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-2">
+            <label htmlFor="date" className={labelClass}>
+              Tanggal
+            </label>
             <input
+              id="date"
               type="date"
               value={date}
               onChange={(event) => setDate(event.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
+              className="min-h-11 rounded-sm border border-line bg-surface px-3 py-2.5 font-mono text-xs text-ink focus:border-accent"
             />
           </div>
-        </header>
+          <button
+            type="button"
+            onClick={() => focusAddForm()}
+            className={primaryButton}
+          >
+            Tambah makan
+          </button>
+        </div>
+      </header>
 
-        {loading && <p className="text-slate-400">Memuat log...</p>}
+      {loading && (
+        <div className="space-y-4" aria-live="polite" aria-busy="true">
+          <div className="h-20 border-y border-line-soft bg-surface" />
+          <div className="h-40 border border-line-soft bg-surface" />
+          <p className="text-sm text-muted">Memuat catatan makanan...</p>
+        </div>
+      )}
 
-        {error && (
-          <p className="rounded-lg bg-red-950 p-3 text-sm text-red-300">{error}</p>
-        )}
+      {error && (
+        <p className={errorBanner} role="alert">
+          {error}
+        </p>
+      )}
 
-        {log && (
-          <>
-            <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { label: 'Kalori', value: `${log.totals.calories} kcal` },
-                { label: 'Protein', value: `${log.totals.protein_g} g` },
-                { label: 'Karbo', value: `${log.totals.carbs_g} g` },
-                { label: 'Lemak', value: `${log.totals.fat_g} g` },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-xl border border-slate-800 bg-slate-900 p-4"
+      {log && (
+        <>
+          <section className="grid grid-cols-2 gap-x-6 gap-y-5 border-y border-line-soft py-5 sm:grid-cols-4">
+            {[
+              { label: 'Kalori', value: `${formatCalories(log.totals.calories)} kkal` },
+              { label: 'Protein', value: `${formatMacro(log.totals.protein_g)} g` },
+              { label: 'Karbo', value: `${formatMacro(log.totals.carbs_g)} g` },
+              { label: 'Lemak', value: `${formatMacro(log.totals.fat_g)} g` },
+            ].map((stat) => (
+              <div key={stat.label}>
+                <p className={sectionLabel}>{stat.label}</p>
+                <p className="mt-1 font-mono text-xl font-medium text-ink">
+                  {stat.value}
+                </p>
+              </div>
+            ))}
+          </section>
+
+          <section
+            id="tambah-makan"
+            className="scroll-mt-24 border border-line-soft bg-surface p-4 sm:p-5"
+            aria-labelledby="tambah-makan-heading"
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <p className={sectionLabel}>01 / Tambah</p>
+                <h2
+                  id="tambah-makan-heading"
+                  className="mt-1 font-display text-2xl font-semibold"
                 >
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
-                    {stat.label}
-                  </p>
-                  <p className="mt-1 text-xl font-semibold text-emerald-400">
-                    {stat.value}
-                  </p>
-                </div>
-              ))}
-            </section>
+                  Cari makanan
+                </h2>
+              </div>
+              <span className="text-xs text-muted">
+                {searching ? 'Mencari...' : 'Minimal 2 huruf'}
+              </span>
+            </div>
 
-            <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-              <h2 className="font-medium">Tambah makanan</h2>
-
-              <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+              <div className="space-y-2">
+                <label htmlFor="food-search" className={labelClass}>
+                  Nama makanan
+                </label>
                 <input
+                  ref={searchRef}
+                  id="food-search"
                   type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Cari makanan (min. 2 huruf)..."
+                  placeholder="Contoh: nasi, ayam, tempe"
                   disabled={selectedFood !== null}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500 disabled:opacity-50"
+                  className={inputClass}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="meal-type" className={labelClass}>
+                  Waktu makan
+                </label>
                 <select
+                  id="meal-type"
                   value={mealType}
-                  onChange={(event) => setMealType(event.target.value as MealType)}
-                  className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
+                  onChange={(event) =>
+                    setMealType(event.target.value as MealType)
+                  }
+                  className={inputClass}
                 >
                   {MEALS.map((meal) => (
                     <option key={meal} value={meal}>
@@ -246,157 +325,194 @@ export default function NutritionPage() {
                   ))}
                 </select>
               </div>
+            </div>
 
-              {searching && (
-                <p className="mt-2 text-sm text-slate-500">Mencari...</p>
+            {!selectedFood && results.length > 0 && (
+              <ul className="mt-4 divide-y divide-line-soft border-y border-line-soft">
+                {results.map((food) => (
+                  <li key={food.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectFood(food)}
+                      className="flex w-full flex-wrap items-baseline justify-between gap-3 px-2 py-3 text-left transition-colors hover:bg-paper"
+                    >
+                      <span>
+                        <span className="block text-sm text-ink">
+                          {food.name}
+                        </span>
+                        <span className="block font-mono text-[11px] text-muted">
+                          P {formatMacro(food.protein_g)} | K{' '}
+                          {formatMacro(food.carbs_g)} | L{' '}
+                          {formatMacro(food.fat_g)} per 100 g
+                        </span>
+                      </span>
+                      <span className="font-mono text-sm text-ink">
+                        {formatCalories(food.calories)} kkal
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {!selectedFood &&
+              !searching &&
+              query.trim().length >= 2 &&
+              results.length === 0 && (
+                <p className="mt-3 text-sm text-muted" aria-live="polite">
+                  Tidak ada makanan yang cocok. Coba kata lain.
+                </p>
               )}
 
-              {!selectedFood &&
-                !searching &&
-                query.trim().length >= 2 &&
-                results.length === 0 && (
-                  <p className="mt-2 text-sm text-slate-500">
-                    Makanan tidak ditemukan.
+            {selectedFood && (
+              <div className="mt-5 border-t border-line-soft pt-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-ink">
+                      {selectedFood.name}
+                    </p>
+                    <p className="mt-1 font-mono text-[11px] text-muted">
+                      {formatCalories(selectedFood.calories)} kkal | P{' '}
+                      {formatMacro(selectedFood.protein_g)} | K{' '}
+                      {formatMacro(selectedFood.carbs_g)} | L{' '}
+                      {formatMacro(selectedFood.fat_g)} per 100 g
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCancelSelection}
+                    className={ghostButton}
+                  >
+                    Batal
+                  </button>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-end gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="quantity" className={labelClass}>
+                      Porsi (gram)
+                    </label>
+                    <input
+                      id="quantity"
+                      type="number"
+                      min={1}
+                      max={5000}
+                      step="1"
+                      value={quantity}
+                      onChange={(event) => setQuantity(event.target.value)}
+                      className="min-h-11 w-32 rounded-sm border border-line bg-paper px-3 py-2.5 font-mono text-sm text-ink focus:border-accent"
+                    />
+                  </div>
+
+                  <p className="pb-2.5 font-mono text-sm text-muted">
+                    {estimatedCalories !== null
+                      ? `+ ${formatCalories(estimatedCalories)} kkal`
+                      : 'Porsi belum valid'}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => void handleAddFood()}
+                    disabled={adding}
+                    className={`${primaryButton} ml-auto`}
+                  >
+                    {adding ? 'Menambahkan...' : 'Tambah ke catatan'}
+                  </button>
+                </div>
+
+                {addError && (
+                  <p className="mt-2 text-xs text-danger" role="alert">
+                    {addError}
                   </p>
                 )}
+              </div>
+            )}
+          </section>
 
-              {!selectedFood && results.length > 0 && (
-                <ul className="mt-3 max-h-64 divide-y divide-slate-800 overflow-y-auto rounded-lg border border-slate-800">
-                  {results.map((food) => (
-                    <li key={food.id}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectFood(food)}
-                        className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left hover:bg-slate-800/60"
-                      >
-                        <span>
-                          <span className="block text-sm text-slate-100">
-                            {food.name}
-                          </span>
-                          <span className="block text-xs text-slate-500">
-                            P {food.protein_g} g | K {food.carbs_g} g | L{' '}
-                            {food.fat_g} g per 100 g
-                          </span>
-                        </span>
-                        <span className="whitespace-nowrap text-sm text-slate-300">
-                          {food.calories} kcal
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {selectedFood && (
-                <div className="mt-3 rounded-xl border border-emerald-900/60 bg-slate-950 p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-slate-100">
-                        {selectedFood.name}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {selectedFood.calories} kcal | P {selectedFood.protein_g} g
-                        {' | '}K {selectedFood.carbs_g} g | L{' '}
-                        {selectedFood.fat_g} g per 100 g
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleCancelSelection}
-                      className="text-xs text-slate-500 hover:text-slate-300"
-                    >
-                      Batal
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-end gap-3">
-                    <div className="space-y-1">
-                      <label htmlFor="quantity" className="text-xs text-slate-400">
-                        Porsi (gram)
-                      </label>
-                      <input
-                        id="quantity"
-                        type="number"
-                        min={1}
-                        max={5000}
-                        step="1"
-                        value={quantity}
-                        onChange={(event) => setQuantity(event.target.value)}
-                        className="w-32 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
-                      />
-                    </div>
-
-                    <div className="pb-2 text-sm text-slate-400">
-                      {estimatedCalories !== null
-                        ? `Perkiraan: ${estimatedCalories} kcal`
-                        : 'Porsi tidak valid'}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => void handleAddFood()}
-                      disabled={adding}
-                      className="ml-auto rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {adding ? 'Menambah...' : 'Tambah ke log'}
-                    </button>
-                  </div>
-
-                  {addError && (
-                    <p className="mt-2 text-sm text-red-400">{addError}</p>
-                  )}
-                </div>
-              )}
-            </section>
-
-            {MEALS.map((meal) => {
+          <div className="space-y-8">
+            {MEALS.map((meal, index) => {
               const entries = log.entries.filter(
                 (entry) => entry.meal_type === meal,
+              )
+              const total = entries.reduce(
+                (sum, entry) => sum + entry.calories,
+                0,
               )
 
               return (
                 <section
                   key={meal}
-                  className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
+                  className="border-t border-line-soft pt-6"
+                  aria-labelledby={`meal-${meal}`}
                 >
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h2 className="font-medium">{MEAL_LABELS[meal]}</h2>
-                    <span className="text-sm text-slate-400">
-                      {entries.reduce((sum, entry) => sum + entry.calories, 0)} kcal
-                    </span>
+                  <div className="flex flex-wrap items-baseline justify-between gap-3">
+                    <div className="flex items-baseline gap-4">
+                      <span className="font-mono text-[11px] text-muted">
+                        {String(index + 2).padStart(2, '0')}
+                      </span>
+                      <h2
+                        id={`meal-${meal}`}
+                        className="font-display text-2xl font-semibold"
+                      >
+                        {MEAL_LABELS[meal]}
+                      </h2>
+                      <span className="font-mono text-[11px] text-muted">
+                        {entries.length === 0
+                          ? 'belum dicatat'
+                          : `${entries.length} item`}
+                      </span>
+                    </div>
+
+                    <div className="flex items-baseline gap-4">
+                      <span className="font-mono text-sm text-ink">
+                        {formatCalories(total)} kkal
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => focusAddForm(meal)}
+                        className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-xs font-medium text-accent-strong hover:underline"
+                      >
+                        Tambah
+                      </button>
+                    </div>
                   </div>
 
                   {entries.length === 0 ? (
-                    <p className="mt-3 text-sm text-slate-500">
-                      Belum ada makanan.
+                    <p className="mt-3 text-sm text-muted">
+                      Belum ada makanan. Kalau sudah makan, catat sekarang.
                     </p>
                   ) : (
-                    <ul className="mt-3 divide-y divide-slate-800">
+                    <ul className="mt-4 divide-y divide-line-soft border-y border-line-soft">
                       {entries.map((entry) => (
                         <li
                           key={entry.id}
-                          className="flex items-center justify-between gap-4 py-2 text-sm"
+                          className="flex flex-wrap items-baseline justify-between gap-3 py-3"
                         >
                           <div>
-                            <p className="text-slate-100">
+                            <p className="text-sm text-ink">
                               {entry.food?.name ?? 'Makanan dihapus'}
                             </p>
-                            <p className="text-xs text-slate-500">
-                              {entry.quantity_g} g | P {entry.protein_g} g | K{' '}
-                              {entry.carbs_g} g | L {entry.fat_g} g
+                            <p className="mt-1 font-mono text-[11px] text-muted">
+                              {entry.quantity_g} g | P{' '}
+                              {formatMacro(entry.protein_g)} | K{' '}
+                              {formatMacro(entry.carbs_g)} | L{' '}
+                              {formatMacro(entry.fat_g)}
                             </p>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="whitespace-nowrap text-slate-300">
-                              {entry.calories} kcal
+
+                          <div className="flex items-baseline gap-4">
+                            <span className="font-mono text-sm text-ink">
+                              {formatCalories(entry.calories)} kkal
                             </span>
                             <button
                               type="button"
                               onClick={() => void handleDeleteEntry(entry.id)}
                               disabled={deletingId === entry.id}
-                              className="text-xs text-slate-500 hover:text-red-400 disabled:opacity-50"
+                              className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-xs text-muted transition-colors hover:text-danger disabled:opacity-50"
                             >
-                              {deletingId === entry.id ? 'Menghapus...' : 'Hapus'}
+                              {deletingId === entry.id
+                                ? 'Menghapus...'
+                                : 'Hapus'}
                             </button>
                           </div>
                         </li>
@@ -406,9 +522,9 @@ export default function NutritionPage() {
                 </section>
               )
             })}
-          </>
-        )}
-      </div>
-    </main>
+          </div>
+        </>
+      )}
+    </div>
   )
 }

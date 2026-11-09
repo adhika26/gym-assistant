@@ -1,6 +1,16 @@
 ﻿import { useEffect, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
 import { ApiError } from '../../lib/api'
+import {
+  dangerButton,
+  errorBanner,
+  ghostButton,
+  inputClass,
+  labelClass,
+  pageIntro,
+  pageTitle,
+  primaryButton,
+  sectionLabel,
+} from '../../lib/ui'
 import { todayLocal } from '../../lib/date'
 import {
   createWorkoutSession,
@@ -36,6 +46,10 @@ function emptySet(): SetDraft {
   }
 }
 
+function formatNumber(value: number): string {
+  return (Math.round(value * 10) / 10).toLocaleString('id-ID')
+}
+
 export default function WorkoutPage() {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [sessions, setSessions] = useState<WorkoutSessionSummary[]>([])
@@ -65,7 +79,7 @@ export default function WorkoutPage() {
         setSessions(sessionData)
       })
       .catch(() => {
-        if (!cancelled) setError('Gagal memuat data latihan.')
+        if (!cancelled) setError('Data latihan gagal dimuat.')
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -123,7 +137,7 @@ export default function WorkoutPage() {
     )
 
     if (invalidSet) {
-      setFormError('Setiap set harus punya exercise dan reps minimal 1.')
+      setFormError('Setiap set butuh latihan dan reps minimal 1.')
       return
     }
 
@@ -154,7 +168,7 @@ export default function WorkoutPage() {
       if (err instanceof ApiError) {
         setFormError(err.message)
       } else {
-        setFormError('Gagal menyimpan sesi latihan.')
+        setFormError('Sesi gagal disimpan.')
       }
     } finally {
       setSaving(false)
@@ -168,7 +182,7 @@ export default function WorkoutPage() {
     try {
       setDetail(await getWorkoutSession(id))
     } catch {
-      setError('Gagal memuat detail sesi.')
+      setError('Detail sesi gagal dimuat.')
     } finally {
       setDetailLoading(false)
     }
@@ -184,161 +198,187 @@ export default function WorkoutPage() {
       if (detail?.id === id) setDetail(null)
       await refreshSessions()
     } catch {
-      setError('Gagal menghapus sesi.')
+      setError('Sesi gagal dihapus.')
     }
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 p-6 text-slate-100">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-10">
+      <header>
+        <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
+          Catatan latihan
+        </p>
+        <h1 className={`${pageTitle} mt-2`}>Latihan</h1>
+        <p className={pageIntro}>
+          Catat sesi, set, reps, dan beban. Angka yang sama akan jadi
+          pembanding minggu depan.
+        </p>
+      </header>
+
+      {loading && (
+        <div className="space-y-4" aria-live="polite" aria-busy="true">
+          <div className="h-48 border border-line-soft bg-surface" />
+          <p className="text-sm text-muted">Memuat data latihan...</p>
+        </div>
+      )}
+
+      {error && (
+        <p className={errorBanner} role="alert">
+          {error}
+        </p>
+      )}
+
+      <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr]">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 border border-line-soft bg-surface p-4 sm:p-5"
+        >
           <div>
-            <h1 className="text-2xl font-semibold">Latihan</h1>
-            <p className="text-sm text-slate-400">
-              Catat sesi, set, reps, dan beban.
-            </p>
+            <p className={sectionLabel}>01 / Sesi baru</p>
+            <h2 className="mt-1 font-display text-2xl font-semibold">
+              Mulai dari satu set
+            </h2>
           </div>
-          <Link
-            to="/"
-            className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
-          >
-            Dashboard
-          </Link>
-        </header>
 
-        {loading && <p className="text-slate-400">Memuat data...</p>}
-
-        {error && (
-          <p className="rounded-lg bg-red-950 p-3 text-sm text-red-300">{error}</p>
-        )}
-
-        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-5"
-          >
-            <h2 className="font-medium">Sesi baru</h2>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <label htmlFor="name" className="text-xs text-slate-400">
-                  Nama sesi
-                </label>
-                <input
-                  id="name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Push Day"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label htmlFor="performed_on" className="text-xs text-slate-400">
-                  Tanggal
-                </label>
-                <input
-                  id="performed_on"
-                  type="date"
-                  value={performedOn}
-                  onChange={(event) => setPerformedOn(event.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label htmlFor="duration" className="text-xs text-slate-400">
-                  Durasi (menit)
-                </label>
-                <input
-                  id="duration"
-                  type="number"
-                  min={1}
-                  max={600}
-                  value={durationMin}
-                  onChange={(event) => setDurationMin(event.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label htmlFor="rpe" className="text-xs text-slate-400">
-                  RPE sesi (1-10)
-                </label>
-                <input
-                  id="rpe"
-                  type="number"
-                  min={1}
-                  max={10}
-                  step="0.5"
-                  value={perceivedExertion}
-                  onChange={(event) => setPerceivedExertion(event.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="notes" className="text-xs text-slate-400">
-                Catatan
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label htmlFor="name" className={labelClass}>
+                Nama sesi
               </label>
-              <textarea
-                id="notes"
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                rows={2}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
+              <input
+                id="name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Push day"
+                className={inputClass}
               />
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-medium text-slate-300">Set</h3>
-                <button
-                  type="button"
-                  onClick={addSet}
-                  className="text-sm text-emerald-400 hover:underline"
-                >
-                  + Tambah set
-                </button>
-              </div>
+            <div className="space-y-2">
+              <label htmlFor="performed_on" className={labelClass}>
+                Tanggal
+              </label>
+              <input
+                id="performed_on"
+                type="date"
+                value={performedOn}
+                onChange={(event) => setPerformedOn(event.target.value)}
+                className={inputClass}
+              />
+            </div>
 
-              {draftSets.map((set, index) => (
-                <div
-                  key={set.key}
-                  className="space-y-2 rounded-xl border border-slate-800 bg-slate-950 p-3"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-slate-500">
-                      Set {index + 1}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeSet(set.key)}
-                      disabled={draftSets.length === 1}
-                      className="text-xs text-slate-500 hover:text-red-400 disabled:opacity-40"
-                    >
-                      Hapus
-                    </button>
-                  </div>
+            <div className="space-y-2">
+              <label htmlFor="duration" className={labelClass}>
+                Durasi (menit)
+              </label>
+              <input
+                id="duration"
+                type="number"
+                min={1}
+                max={600}
+                value={durationMin}
+                onChange={(event) => setDurationMin(event.target.value)}
+                className={inputClass}
+              />
+            </div>
 
+            <div className="space-y-2">
+              <label htmlFor="rpe" className={labelClass}>
+                RPE sesi (1-10)
+              </label>
+              <input
+                id="rpe"
+                type="number"
+                min={1}
+                max={10}
+                step="0.5"
+                value={perceivedExertion}
+                onChange={(event) => setPerceivedExertion(event.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="notes" className={labelClass}>
+              Catatan
+            </label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              rows={2}
+              className={`${inputClass} min-h-20 resize-y`}
+            />
+          </div>
+
+          <div className="space-y-4 border-t border-line-soft pt-5">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <p className={sectionLabel}>02 / Set</p>
+              <button
+                type="button"
+                onClick={addSet}
+                className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-xs font-medium text-accent-strong hover:underline"
+              >
+                Tambah set
+              </button>
+            </div>
+
+            {draftSets.map((set, index) => (
+              <fieldset
+                key={set.key}
+                className="space-y-3 border-t border-line-soft pt-4"
+              >
+                <legend className="sr-only">Set {index + 1}</legend>
+
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-mono text-[11px] text-muted">
+                    Set {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeSet(set.key)}
+                    disabled={draftSets.length === 1}
+                    className={ghostButton}
+                  >
+                    Hapus
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor={`exercise-${set.key}`}
+                    className={labelClass}
+                  >
+                    Latihan
+                  </label>
                   <select
+                    id={`exercise-${set.key}`}
                     value={set.exerciseId}
                     onChange={(event) =>
                       updateSet(set.key, { exerciseId: event.target.value })
                     }
-                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
+                    className={inputClass}
                   >
-                    <option value="">Pilih exercise</option>
+                    <option value="">Pilih latihan</option>
                     {exercises.map((exercise) => (
                       <option key={exercise.id} value={exercise.id}>
                         {exercise.name} ({exercise.primary_muscle})
                       </option>
                     ))}
                   </select>
+                </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <label
+                      htmlFor={`weight-${set.key}`}
+                      className="block text-[10px] font-medium uppercase tracking-[0.08em] text-muted"
+                    >
+                      Berat
+                    </label>
                     <input
+                      id={`weight-${set.key}`}
                       type="number"
                       min={0}
                       max={1000}
@@ -347,10 +387,20 @@ export default function WorkoutPage() {
                       onChange={(event) =>
                         updateSet(set.key, { weight: event.target.value })
                       }
-                      placeholder="Berat (kg)"
-                      className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
+                      placeholder="kg"
+                      className="min-h-11 w-full rounded-sm border border-line bg-paper px-2 py-2.5 font-mono text-sm text-ink placeholder:text-muted/70 focus:border-accent"
                     />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label
+                      htmlFor={`reps-${set.key}`}
+                      className="block text-[10px] font-medium uppercase tracking-[0.08em] text-muted"
+                    >
+                      Reps
+                    </label>
                     <input
+                      id={`reps-${set.key}`}
                       type="number"
                       min={1}
                       max={1000}
@@ -358,10 +408,20 @@ export default function WorkoutPage() {
                       onChange={(event) =>
                         updateSet(set.key, { reps: event.target.value })
                       }
-                      placeholder="Reps"
-                      className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
+                      placeholder="10"
+                      className="min-h-11 w-full rounded-sm border border-line bg-paper px-2 py-2.5 font-mono text-sm text-ink placeholder:text-muted/70 focus:border-accent"
                     />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label
+                      htmlFor={`rpe-${set.key}`}
+                      className="block text-[10px] font-medium uppercase tracking-[0.08em] text-muted"
+                    >
+                      RPE
+                    </label>
                     <input
+                      id={`rpe-${set.key}`}
                       type="number"
                       min={1}
                       max={10}
@@ -370,119 +430,133 @@ export default function WorkoutPage() {
                       onChange={(event) =>
                         updateSet(set.key, { rpe: event.target.value })
                       }
-                      placeholder="RPE"
-                      className="rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
+                      placeholder="8"
+                      className="min-h-11 w-full rounded-sm border border-line bg-paper px-2 py-2.5 font-mono text-sm text-ink placeholder:text-muted/70 focus:border-accent"
                     />
                   </div>
-
-                  <label className="flex items-center gap-2 text-xs text-slate-400">
-                    <input
-                      type="checkbox"
-                      checked={set.isWarmup}
-                      onChange={(event) =>
-                        updateSet(set.key, { isWarmup: event.target.checked })
-                      }
-                    />
-                    Warm-up
-                  </label>
-                </div>
-              ))}
-            </div>
-
-            {formError && (
-              <p className="rounded-lg bg-red-950 p-3 text-sm text-red-300">
-                {formError}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full rounded-lg bg-emerald-500 px-4 py-2 font-medium text-slate-950 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving ? 'Menyimpan...' : 'Simpan sesi'}
-            </button>
-          </form>
-
-          <div className="space-y-6">
-            <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-              <h2 className="font-medium">Riwayat</h2>
-
-              {sessions.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">Belum ada sesi.</p>
-              ) : (
-                <ul className="mt-3 divide-y divide-slate-800">
-                  {sessions.map((session) => (
-                    <li
-                      key={session.id}
-                      className="flex items-center justify-between gap-3 py-3"
-                    >
-                      <div>
-                        <p className="text-sm text-slate-100">{session.name}</p>
-                        <p className="text-xs text-slate-500">
-                          {session.performed_on} | {session.sets_count} set
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => void handleViewSession(session.id)}
-                          className="text-xs text-emerald-400 hover:underline"
-                        >
-                          Lihat
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleDeleteSession(session.id)}
-                          className="text-xs text-slate-500 hover:text-red-400"
-                        >
-                          Hapus
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            {detailLoading && (
-              <p className="text-sm text-slate-400">Memuat detail...</p>
-            )}
-
-            {detail && (
-              <section className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-                <div className="flex items-baseline justify-between gap-2">
-                  <h2 className="font-medium">{detail.name}</h2>
-                  <span className="text-xs text-slate-500">
-                    {detail.performed_on}
-                  </span>
                 </div>
 
-                <ul className="mt-3 space-y-2">
-                  {detail.sets.map((set) => (
-                    <li
-                      key={set.id}
-                      className="flex items-center justify-between gap-3 text-sm"
-                    >
-                      <div>
-                        <p className="text-slate-100">{set.exercise_name}</p>
-                        <p className="text-xs text-slate-500">
-                          Set {set.set_number}
-                          {set.is_warmup ? ' (warm-up)' : ''}
-                        </p>
-                      </div>
-                      <span className="text-slate-300">
-                        {set.weight_kg ?? 0} kg x {set.reps}
-                        {set.rpe !== null ? ` @ RPE ${set.rpe}` : ''}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+                <label className="flex min-h-11 items-center gap-2 text-xs text-muted">
+                  <input
+                    type="checkbox"
+                    checked={set.isWarmup}
+                    onChange={(event) =>
+                      updateSet(set.key, { isWarmup: event.target.checked })
+                    }
+                  />
+                  Warm-up
+                </label>
+              </fieldset>
+            ))}
           </div>
+
+          {formError && (
+            <p className={errorBanner} role="alert">
+              {formError}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={saving}
+            className={`${primaryButton} w-full`}
+          >
+            {saving ? 'Menyimpan...' : 'Simpan sesi'}
+          </button>
+        </form>
+
+        <div className="space-y-8">
+          <section aria-labelledby="riwayat-heading">
+            <p className={sectionLabel}>03 / Riwayat</p>
+            <h2
+              id="riwayat-heading"
+              className="mt-1 font-display text-2xl font-semibold"
+            >
+              Sesi terakhir
+            </h2>
+
+            {sessions.length === 0 ? (
+              <p className="mt-4 text-sm leading-6 text-muted">
+                Belum ada sesi. Sesi pertama akan jadi pembanding untuk
+                berikutnya.
+              </p>
+            ) : (
+              <ul className="mt-4 divide-y divide-line-soft border-y border-line-soft">
+                {sessions.map((session) => (
+                  <li
+                    key={session.id}
+                    className="flex flex-wrap items-center justify-between gap-3 py-3"
+                  >
+                    <div>
+                      <p className="text-sm text-ink">{session.name}</p>
+                      <p className="mt-1 font-mono text-[11px] text-muted">
+                        {session.performed_on} | {session.sets_count} set
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void handleViewSession(session.id)}
+                        className="inline-flex min-h-11 min-w-11 items-center justify-center px-2 text-xs font-medium text-accent-strong hover:underline"
+                      >
+                        Lihat
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDeleteSession(session.id)}
+                        className={dangerButton}
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {detailLoading && (
+            <p className="text-sm text-muted" aria-live="polite">
+              Memuat detail...
+            </p>
+          )}
+
+          {detail && (
+            <section className="border-t border-line-soft pt-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-3">
+                <h2 className="font-display text-2xl font-semibold">
+                  {detail.name}
+                </h2>
+                <span className="font-mono text-[11px] text-muted">
+                  {detail.performed_on}
+                </span>
+              </div>
+
+              <ul className="mt-4 divide-y divide-line-soft border-y border-line-soft">
+                {detail.sets.map((set) => (
+                  <li
+                    key={set.id}
+                    className="flex flex-wrap items-baseline justify-between gap-3 py-3"
+                  >
+                    <div>
+                      <p className="text-sm text-ink">{set.exercise_name}</p>
+                      <p className="mt-1 font-mono text-[11px] text-muted">
+                        Set {set.set_number}
+                        {set.is_warmup ? ' | warm-up' : ''}
+                      </p>
+                    </div>
+                    <span className="font-mono text-sm text-ink">
+                      {formatNumber(set.weight_kg ?? 0)} kg x {set.reps}
+                      {set.rpe !== null ? ` | RPE ${set.rpe}` : ''}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
       </div>
-    </main>
+    </div>
   )
 }

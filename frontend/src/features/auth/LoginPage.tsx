@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { ApiError } from '../../lib/api'
+import { errorBanner, inputClass, labelClass, primaryButton } from '../../lib/ui'
+import AuthLayout from './AuthLayout'
 import { useAuth } from './auth-context'
 
 export default function LoginPage() {
@@ -31,7 +33,7 @@ export default function LoginPage() {
         setErrors(error.errors ?? {})
         if (!error.errors) setMessage(error.message)
       } else {
-        setMessage('Tidak dapat terhubung ke server.')
+        setMessage('Server tidak bisa dihubungi. Coba lagi.')
       }
     } finally {
       setSubmitting(false)
@@ -39,24 +41,31 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-slate-100">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-5 rounded-2xl border border-slate-800 bg-slate-900 p-8"
-      >
-        <div>
-          <h1 className="text-2xl font-semibold">Masuk</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Lanjutkan perjalanan kebugaran Anda.
-          </p>
-        </div>
-
+    <AuthLayout
+      kicker="Masuk ke akun"
+      title="Lanjutkan catatanmu"
+      intro="Masuk untuk melihat sisa kalori, sesi terakhir, dan progres yang sudah kamu catat."
+      footer={
+        <>
+          Belum punya akun?{' '}
+          <Link
+            to="/register"
+            className="inline-flex min-h-11 items-center font-medium text-accent-strong underline underline-offset-4"
+          >
+            Buat akun
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
         {message && (
-          <p className="rounded-lg bg-red-950 p-3 text-sm text-red-300">{message}</p>
+          <p className={errorBanner} role="alert" aria-live="polite">
+            {message}
+          </p>
         )}
 
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm text-slate-300">
+        <div className="space-y-2">
+          <label htmlFor="email" className={labelClass}>
             Email
           </label>
           <input
@@ -66,15 +75,15 @@ export default function LoginPage() {
             onChange={(event) => setEmail(event.target.value)}
             required
             autoComplete="email"
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-emerald-500"
+            className={inputClass}
           />
-          {errors.email && (
-            <p className="text-sm text-red-400">{errors.email[0]}</p>
+          {errors.email?.[0] && (
+            <p className="text-xs text-danger">{errors.email[0]}</p>
           )}
         </div>
 
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm text-slate-300">
+        <div className="space-y-2">
+          <label htmlFor="password" className={labelClass}>
             Password
           </label>
           <input
@@ -84,28 +93,17 @@ export default function LoginPage() {
             onChange={(event) => setPassword(event.target.value)}
             required
             autoComplete="current-password"
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none focus:border-emerald-500"
+            className={inputClass}
           />
-          {errors.password && (
-            <p className="text-sm text-red-400">{errors.password[0]}</p>
+          {errors.password?.[0] && (
+            <p className="text-xs text-danger">{errors.password[0]}</p>
           )}
         </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded-lg bg-emerald-500 px-4 py-2 font-medium text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {submitting ? 'Memproses...' : 'Masuk'}
+        <button type="submit" disabled={submitting} className={`${primaryButton} w-full`}>
+          {submitting ? 'Memeriksa...' : 'Masuk'}
         </button>
-
-        <p className="text-center text-sm text-slate-400">
-          Belum punya akun?{' '}
-          <Link to="/register" className="text-emerald-400 hover:underline">
-            Daftar
-          </Link>
-        </p>
       </form>
-    </main>
+    </AuthLayout>
   )
 }

@@ -1,21 +1,22 @@
-import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router";
-import LoginPage from "./features/auth/LoginPage";
-import RegisterPage from "./features/auth/RegisterPage";
-import RequireAuth from "./features/auth/RequireAuth";
-import DashboardPage from "./pages/DashboardPage";
-import OnboardingPage from "./features/profile/OnboardingPage";
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes } from 'react-router'
+import AppShell from './components/layout/AppShell'
+import LoginPage from './features/auth/LoginPage'
+import RegisterPage from './features/auth/RegisterPage'
+import RequireAuth from './features/auth/RequireAuth'
+import OnboardingPage from './features/profile/OnboardingPage'
+import DashboardPage from './pages/DashboardPage'
 
-const NutritionPage = lazy(() => import("./features/nutrition/NutritionPage"));
-const WorkoutPage = lazy(() => import("./features/workout/WorkoutPage"));
-const ProgressPage = lazy(() => import("./features/progress/ProgressPage"));
-const ChatPage = lazy(() => import("./features/chat/ChatPage"));
+const NutritionPage = lazy(() => import('./features/nutrition/NutritionPage'))
+const WorkoutPage = lazy(() => import('./features/workout/WorkoutPage'))
+const ProgressPage = lazy(() => import('./features/progress/ProgressPage'))
+const ChatPage = lazy(() => import('./features/chat/ChatPage'))
 
 export default function App() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-400">
+        <div className="flex min-h-screen items-center justify-center bg-paper px-6 text-sm text-muted">
           Memuat...
         </div>
       }
@@ -25,15 +26,6 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
 
         <Route
-          path="/"
-          element={
-            <RequireAuth>
-              <DashboardPage />
-            </RequireAuth>
-          }
-        />
-
-        <Route
           path="/onboarding"
           element={
             <RequireAuth>
@@ -41,42 +33,23 @@ export default function App() {
             </RequireAuth>
           }
         />
+
         <Route
-          path="/nutrition"
           element={
             <RequireAuth>
-              <NutritionPage />
+              <AppShell />
             </RequireAuth>
           }
-        />
-        <Route
-          path="/workout"
-          element={
-            <RequireAuth>
-              <WorkoutPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/progress"
-          element={
-            <RequireAuth>
-              <ProgressPage />
-            </RequireAuth>
-          }
-        />
+        >
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/nutrition" element={<NutritionPage />} />
+          <Route path="/workout" element={<WorkoutPage />} />
+          <Route path="/progress" element={<ProgressPage />} />
+          <Route path="/coach" element={<ChatPage />} />
+        </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
-
-        <Route
-          path="/coach"
-          element={
-            <RequireAuth>
-              <ChatPage />
-            </RequireAuth>
-          }
-        />
       </Routes>
     </Suspense>
-  );
+  )
 }

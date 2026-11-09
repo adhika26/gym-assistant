@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
 import { ApiError } from '../../lib/api'
+import {
+  errorBanner,
+  inputClass,
+  pageIntro,
+  pageTitle,
+  primaryButton,
+  secondaryButton,
+  sectionLabel,
+} from '../../lib/ui'
 import {
   getConversationMessages,
   getConversations,
@@ -25,7 +33,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -37,7 +45,7 @@ export default function ChatPage() {
         if (data.length > 0) setActiveId(data[0].id)
       })
       .catch(() => {
-        if (!cancelled) setError('Gagal memuat percakapan.')
+        if (!cancelled) setError('Riwayat percakapan gagal dimuat.')
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -62,7 +70,7 @@ export default function ChatPage() {
         if (!cancelled) setMessages(data)
       })
       .catch(() => {
-        if (!cancelled) setError('Gagal memuat pesan.')
+        if (!cancelled) setError('Pesan gagal dimuat.')
       })
       .finally(() => {
         if (!cancelled) setLoadingMessages(false)
@@ -74,7 +82,11 @@ export default function ChatPage() {
   }, [activeId])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = messagesRef.current
+
+    if (!container) return
+
+    container.scrollTop = container.scrollHeight
   }, [messages, sending])
 
   async function refreshConversations() {
@@ -133,7 +145,7 @@ export default function ChatPage() {
       if (err instanceof ApiError) {
         setError(err.message)
       } else {
-        setError('Gagal mengirim pesan.')
+        setError('Pesan gagal dikirim.')
       }
     } finally {
       setSending(false)
@@ -144,158 +156,169 @@ export default function ChatPage() {
     (message) => message.role === 'user' || message.role === 'assistant',
   )
 
+  const conversationList = (
+    <div className="mt-3">
+      {loading ? (
+        <p className="text-sm text-muted">Memuat riwayat...</p>
+      ) : conversations.length === 0 ? (
+        <p className="text-sm leading-6 text-muted">
+          Belum ada percakapan. Mulai dari pertanyaan di samping.
+        </p>
+      ) : (
+        <ul className="divide-y divide-line-soft border-y border-line-soft">
+          {conversations.map((conversation) => (
+            <li key={conversation.id}>
+              <button
+                type="button"
+                onClick={() => setActiveId(conversation.id)}
+                className={`w-full border-l-2 px-3 py-3 text-left transition-colors ${
+                  activeId === conversation.id
+                    ? 'border-accent bg-surface'
+                    : 'border-transparent hover:bg-surface'
+                }`}
+              >
+                <span className="block truncate text-sm text-ink">
+                  {conversation.title || 'Percakapan'}
+                </span>
+                <span className="mt-1 block font-mono text-[10px] text-muted">
+                  {conversation.updated_at.slice(0, 10)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+
   return (
-    <main className="min-h-screen bg-slate-950 p-4 text-slate-100 md:p-6">
-      <div className="mx-auto flex max-w-5xl flex-col gap-4">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">AI Coach</h1>
-            <p className="text-sm text-slate-400">
-              Tanya soal nutrisi, latihan, dan progres Anda.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={startNewChat}
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
-            >
-              Chat baru
-            </button>
-            <Link
-              to="/"
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
-            >
-              Dashboard
-            </Link>
-          </div>
-        </header>
+    <div className="space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
+            AI Coach
+          </p>
+          <h1 className={`${pageTitle} mt-2`}>Coach</h1>
+          <p className={`${pageIntro} hidden sm:block`}>
+            Tanya soal nutrisi, latihan, dan progress. Jawabannya memakai data
+            yang sudah kamu catat.
+          </p>
+        </div>
 
-        {error && (
-          <p className="rounded-lg bg-red-950 p-3 text-sm text-red-300">{error}</p>
-        )}
+        <button type="button" onClick={startNewChat} className={secondaryButton}>
+          Chat baru
+        </button>
+      </header>
 
-        <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
-          <aside className="rounded-2xl border border-slate-800 bg-slate-900 p-3">
-            <h2 className="px-2 text-sm font-medium text-slate-300">
-              Percakapan
-            </h2>
+      {error && (
+        <p className={errorBanner} role="alert">
+          {error}
+        </p>
+      )}
 
-            {loading ? (
-              <p className="mt-3 px-2 text-sm text-slate-500">Memuat...</p>
-            ) : conversations.length === 0 ? (
-              <p className="mt-3 px-2 text-sm text-slate-500">
-                Belum ada percakapan.
+      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+        <aside className="hidden lg:block">
+          <p className={sectionLabel}>Riwayat</p>
+          {conversationList}
+        </aside>
+
+        <details className="order-2 border border-line-soft bg-surface p-4 lg:order-none lg:hidden">
+          <summary className="flex min-h-11 items-center text-sm font-medium text-ink">
+            Riwayat percakapan
+          </summary>
+          {conversationList}
+        </details>
+
+        <section
+          className="order-1 flex h-[calc(100dvh-17rem)] min-h-96 flex-col border border-line-soft bg-surface lg:order-none lg:h-[calc(100dvh-13rem)]"
+          aria-label="Percakapan coach"
+        >
+          <div ref={messagesRef} className="flex-1 space-y-4 overflow-y-auto p-4">
+            {loadingMessages && (
+              <p className="text-sm text-muted" aria-live="polite">
+                Memuat pesan...
               </p>
-            ) : (
-              <ul className="mt-2 max-h-56 space-y-1 overflow-y-auto lg:max-h-[60vh]">
-                {conversations.map((conversation) => (
-                  <li key={conversation.id}>
-                    <button
-                      type="button"
-                      onClick={() => setActiveId(conversation.id)}
-                      className={`w-full rounded-lg px-2 py-2 text-left transition ${
-                        activeId === conversation.id
-                          ? 'bg-slate-800'
-                          : 'hover:bg-slate-800/60'
-                      }`}
-                    >
-                      <span className="block truncate text-sm text-slate-200">
-                        {conversation.title || 'Percakapan'}
-                      </span>
-                      <span className="block text-xs text-slate-500">
-                        {conversation.updated_at.slice(0, 10)}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
             )}
-          </aside>
 
-          <section className="flex min-h-[60vh] flex-col rounded-2xl border border-slate-800 bg-slate-900">
-            <div className="flex-1 space-y-3 overflow-y-auto p-4">
-              {loadingMessages && (
-                <p className="text-sm text-slate-500">Memuat pesan...</p>
-              )}
-
-              {!loadingMessages && visibleMessages.length === 0 && (
-                <div className="rounded-xl border border-dashed border-slate-700 p-4">
-                  <p className="text-sm text-slate-300">
-                    Mulai percakapan. Coba salah satu pertanyaan ini:
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {SUGGESTIONS.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        onClick={() => setInput(suggestion)}
-                        className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-emerald-500 hover:text-emerald-400"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {visibleMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${
-                      message.role === 'user'
-                        ? 'bg-emerald-500 text-slate-950'
-                        : 'bg-slate-800 text-slate-100'
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap">
-                      {message.content ?? ''}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {sending && (
-                <p className="animate-pulse text-sm text-slate-500">
-                  Coach sedang mengetik...
+            {!loadingMessages && visibleMessages.length === 0 && (
+              <div className="max-w-md">
+                <p className="font-display text-2xl font-semibold">
+                  Mulai dari satu pertanyaan.
                 </p>
-              )}
+                <p className="mt-2 text-sm leading-6 text-muted">
+                  Coach bisa melihat profil, sisa kalori, berat terakhir, dan
+                  sesi latihanmu. Tidak perlu menjelaskan ulang dari nol.
+                </p>
+                <div className="mt-5 space-y-2">
+                  {SUGGESTIONS.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => setInput(suggestion)}
+                      className="flex min-h-11 items-center text-left text-sm font-medium text-accent-strong underline underline-offset-4"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-              <div ref={bottomRef} />
+            {visibleMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${
+                  message.role === 'user' ? 'justify-end' : 'justify-start'
+                }`}
+              >
+                <div
+                  className={
+                    message.role === 'user'
+                      ? 'ml-auto max-w-[85%] rounded-sm bg-accent px-4 py-2.5 text-sm text-white'
+                      : 'mr-auto max-w-[88%] border border-line-soft bg-paper px-4 py-3 text-sm text-ink'
+                  }
+                >
+                  <p className="whitespace-pre-wrap">{message.content ?? ''}</p>
+                </div>
+              </div>
+            ))}
+
+            {sending && (
+              <p className="text-sm text-muted" aria-live="polite">
+                Coach sedang menulis...
+              </p>
+            )}
+
+          </div>
+
+          <form onSubmit={handleSend} className="border-t border-line-soft p-3">
+            <div className="flex gap-2">
+              <label htmlFor="chat-input" className="sr-only">
+                Pesan untuk coach
+              </label>
+              <input
+                id="chat-input"
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder="Tanya soal nutrisi atau latihan..."
+                maxLength={2000}
+                className={`${inputClass} flex-1`}
+              />
+              <button
+                type="submit"
+                disabled={sending || input.trim() === ''}
+                className={primaryButton}
+              >
+                Kirim
+              </button>
             </div>
 
-            <form
-              onSubmit={handleSend}
-              className="border-t border-slate-800 p-3"
-            >
-              <div className="flex gap-2">
-                <input
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
-                  placeholder="Tanya sesuatu tentang nutrisi atau latihan..."
-                  maxLength={2000}
-                  className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
-                />
-                <button
-                  type="submit"
-                  disabled={sending || input.trim() === ''}
-                  className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Kirim
-                </button>
-                 <p className="mt-2 text-center text-[11px] text-slate-500">
-                AI bisa membuat kesalahan. Bukan pengganti dokter atau ahli gizi.
-              </p>
-              </div>
-            </form>
-          </section>
-        </div>
+            <p className="mt-2 text-center text-[11px] text-muted">
+              AI bisa membuat kesalahan. Bukan pengganti dokter atau ahli gizi.
+            </p>
+          </form>
+        </section>
       </div>
-    </main>
+    </div>
   )
 }
