@@ -1,4 +1,8 @@
 const TOKEN_KEY = 'gym_token'
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '/api/v1').replace(
+  /\/$/,
+  '',
+)
 
 export class ApiError extends Error {
   status: number
@@ -32,7 +36,7 @@ export function clearToken(): void {
 export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const token = getToken()
 
-  const response = await fetch(`/api/v1${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     method: options.method ?? 'GET',
     headers: {
       Accept: 'application/json',
