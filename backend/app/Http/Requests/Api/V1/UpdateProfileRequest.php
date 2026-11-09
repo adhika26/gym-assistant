@@ -44,4 +44,11 @@ class UpdateProfileRequest extends FormRequest
             'allergies.*' => ['string', 'max:50'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'birth_date.before' => 'Tanggal lahir harus sebelum hari ini.',
+        ];
+    }
 }

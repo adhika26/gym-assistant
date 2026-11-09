@@ -261,6 +261,7 @@ export default function WorkoutPage() {
               <input
                 id="performed_on"
                 type="date"
+                max={todayLocal()}
                 value={performedOn}
                 onChange={(event) => setPerformedOn(event.target.value)}
                 className={inputClass}

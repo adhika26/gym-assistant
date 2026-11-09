@@ -278,6 +278,7 @@ export default function ProgressPage() {
                   <input
                     id="measured_on"
                     type="date"
+                    max={todayLocal()}
                     value={measuredOn}
                     onChange={(event) => setMeasuredOn(event.target.value)}
                     className={inputClass}

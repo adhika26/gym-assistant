@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { ApiError } from '../../lib/api'
+import { todayLocal } from '../../lib/date'
 import {
   errorBanner,
   inputClass,
@@ -146,6 +147,7 @@ export default function OnboardingPage() {
                     <input
                       id="birth_date"
                       type="date"
+                      max={todayLocal()}
                       value={form.birth_date}
                       onChange={(event) =>
                         update('birth_date', event.target.value)

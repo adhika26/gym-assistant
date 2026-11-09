@@ -222,6 +222,7 @@ export default function NutritionPage() {
             <input
               id="date"
               type="date"
+              max={todayLocal()}
               value={date}
               onChange={(event) => setDate(event.target.value)}
               className="min-h-11 rounded-sm border border-line bg-surface px-3 py-2.5 font-mono text-xs text-ink focus:border-accent"

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 import AppShell from './components/layout/AppShell'
+import ScrollToTop from './components/layout/ScrollToTop'
 import LoginPage from './features/auth/LoginPage'
 import RegisterPage from './features/auth/RegisterPage'
 import RequireAuth from './features/auth/RequireAuth'
@@ -21,6 +22,7 @@ export default function App() {
         </div>
       }
     >
+      <ScrollToTop />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

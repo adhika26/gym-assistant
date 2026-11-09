@@ -25,4 +25,12 @@ class StoreMeasurementRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'measured_on.before_or_equal' => 'Tanggal pengukuran tidak boleh melewati hari ini.',
+            'measured_on.date_format' => 'Format tanggal pengukuran tidak valid.',
+        ];
+    }
 }
