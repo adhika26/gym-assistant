@@ -31,7 +31,7 @@ class FoodSeeder extends Seeder
         ];
 
         foreach ($foods as $food) {
-            Food::updateOrCreate(
+            Food::firstOrCreate(
                 ['name' => $food['name'], 'brand' => null],
                 [
                     ...$food,

@@ -36,7 +36,7 @@ class ExerciseSeeder extends Seeder
         ];
 
         foreach ($exercises as $exercise) {
-            Exercise::updateOrCreate(
+            Exercise::firstOrCreate(
                 ['slug' => Str::slug($exercise['name'])],
                 [
                     ...$exercise,
