@@ -20,7 +20,9 @@ class ExerciseController extends Controller
         $query = Exercise::query()->visibleTo($request->user()->id);
 
         if (! empty($validated['q'])) {
-            $query->where('name', 'like', '%' . $validated['q'] . '%');
+            $like = '%' . mb_strtolower($validated['q']) . '%';
+
+            $query->whereRaw('LOWER(name) LIKE ?', [$like]);
         }
 
         if (! empty($validated['muscle'])) {

@@ -17,11 +17,11 @@ class FoodController extends Controller
         $query = Food::query()->visibleTo($request->user()->id);
 
         if ($term !== '') {
-            $like = "%{$term}%";
+            $like = '%' . mb_strtolower($term) . '%';
 
             $query->where(function ($query) use ($like) {
-                $query->where('name', 'like', $like)
-                    ->orWhere('brand', 'like', $like);
+                $query->whereRaw('LOWER(name) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(brand) LIKE ?', [$like]);
             });
         }
 
