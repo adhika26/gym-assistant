@@ -47,6 +47,17 @@ class AiChatController extends Controller
         $user = $request->user();
         $conversationId = $validated['conversation_id'] ?? null;
 
+        $dailyLimit = (int) config('ai.limits.daily_messages');
+        $usedToday = $user->aiUsageLogs()
+            ->whereDate('created_at', today())
+            ->count();
+
+        if ($dailyLimit > 0 && $usedToday >= $dailyLimit) {
+            return response()->json([
+                'message' => 'Kuota harian AI sudah habis. Coba lagi besok.',
+            ], 429);
+        }
+
         if ($conversationId !== null) {
             $ownsConversation = $user->conversations()
                 ->whereKey($conversationId)
@@ -57,6 +68,8 @@ class AiChatController extends Controller
 
         $agent = new FitnessCoach($contextBuilder->forUser($user));
 
+        $startedAt = microtime(true);
+
         $response = $agent
             ->continueOrStart($conversationId, $user)
             ->prompt(
@@ -66,9 +79,30 @@ class AiChatController extends Controller
                 timeout: 120,
             );
 
+        $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
+
+        $user->aiUsageLogs()->create([
+            'conversation_id' => $response->conversationId,
+            'provider' => config('ai.default'),
+            'model' => config('ai.default_model'),
+            'input_tokens' => $response->usage->inputTokens,
+            'output_tokens' => $response->usage->outputTokens,
+            'total_tokens' => $response->usage->totalTokens(),
+            'latency_ms' => $latencyMs,
+        ]);
+
         return response()->json([
             'conversation_id' => $response->conversationId,
             'message' => (string) $response,
+            'usage' => [
+                'input_tokens' => $response->usage->inputTokens,
+                'output_tokens' => $response->usage->outputTokens,
+                'total_tokens' => $response->usage->totalTokens(),
+            ],
+            'quota' => [
+                'used' => $usedToday + 1,
+                'limit' => $dailyLimit,
+            ],
         ]);
     }
 }

@@ -119,4 +119,40 @@ class AiChatTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonValidationErrors('message');
     }
+
+    public function test_usage_is_logged_after_chat(): void
+{
+    FitnessCoach::fake(['Balasan.']);
+
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/v1/ai/chat', [
+        'message' => 'Halo',
+    ])->assertOk();
+
+    $this->assertDatabaseHas('ai_usage_logs', [
+        'user_id' => $user->id,
+        'provider' => config('ai.default'),
+        'model' => config('ai.default_model'),
+    ]);
+}
+
+public function test_daily_quota_is_enforced(): void
+{
+    FitnessCoach::fake(['Balasan.']);
+
+    config(['ai.limits.daily_messages' => 1]);
+
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/v1/ai/chat', [
+        'message' => 'Halo',
+    ])->assertOk();
+
+    $this->postJson('/api/v1/ai/chat', [
+        'message' => 'Halo lagi',
+    ])->assertStatus(429);
+}
 }

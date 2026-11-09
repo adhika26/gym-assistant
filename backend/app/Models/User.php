@@ -61,4 +61,9 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->is_admin;
     }
+
+    public function aiUsageLogs(): HasMany
+{
+    return $this->hasMany(AiUsageLog::class);
+}
 }
