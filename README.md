@@ -145,6 +145,8 @@ The suite covers authentication, profile calculation, food access, meal logging 
 
 The intended free-tier stack is Render for the API, Neon for PostgreSQL, and Vercel for the frontend.
 
+Render now asks some new accounts for a card. If that happens, use Back4App Containers instead. It builds the same `backend/Dockerfile`, uses the same Neon database, and does not require a card. The full walkthrough is in [`docs/deploy-back4app.md`](docs/deploy-back4app.md).
+
 ### Backend on Render
 
 1. Create a Neon PostgreSQL project and copy the connection string.

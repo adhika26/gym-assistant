@@ -10,6 +10,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcurl4-openssl-dev \
     && docker-php-ext-install pdo_pgsql pgsql zip intl mbstring curl fileinfo \
     && a2enmod rewrite \
+    && sed -ri \
+        -e 's/^StartServers.*/StartServers 2/' \
+        -e 's/^MinSpareServers.*/MinSpareServers 1/' \
+        -e 's/^MaxSpareServers.*/MaxSpareServers 3/' \
+        -e 's/^ServerLimit.*/ServerLimit 6/' \
+        -e 's/^MaxRequestWorkers.*/MaxRequestWorkers 6/' \
+        -e 's/^MaxConnectionsPerChild.*/MaxConnectionsPerChild 500/' \
+        /etc/apache2/mods-available/mpm_prefork.conf \
+    && printf 'memory_limit=160M\nmax_execution_time=180\n' > /usr/local/etc/php/conf.d/zz-angkat.ini \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

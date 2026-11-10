@@ -3,11 +3,13 @@ set -e
 
 PORT="${PORT:-80}"
 
-sed -ri "s/^Listen 80$/Listen ${PORT}/" /etc/apache2/ports.conf
-sed -ri "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf
+if [ "$PORT" != "80" ]; then
+  sed -ri "s/^Listen 80$/Listen 80\nListen ${PORT}/" /etc/apache2/ports.conf
+  sed "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf > /etc/apache2/sites-available/010-port.conf
+  a2ensite 010-port > /dev/null
+fi
 
 php artisan config:clear
-php artisan filament:assets || true
 
 attempt=0
 until php artisan migrate --force; do
